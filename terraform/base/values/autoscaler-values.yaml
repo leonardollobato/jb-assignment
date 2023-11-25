@@ -1,0 +1,9 @@
+sslCertPath: "/etc/ssl/certs/ca-bundle.crt"
+cloudProvider: aws
+autoDiscovery:
+  enabled: true
+fullnameOverride: "cluster-autoscaler"
+rbac:
+  create: true
+nodeSelector:
+  eks.amazonaws.com/capacityType: ON_DEMAND

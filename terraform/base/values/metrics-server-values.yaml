@@ -1,0 +1,4 @@
+metrics:
+  enabled: false
+nodeSelector:
+  eks.amazonaws.com/capacityType: ON_DEMAND

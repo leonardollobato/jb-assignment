@@ -1,0 +1,352 @@
+
+## Argo Configs
+configs:
+  # General Argo CD configuration
+  ## Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml
+  
+  # Argo CD configuration parameters
+  ## Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cmd-params-cm.yaml
+  params:
+    ## Server properties
+    # -- Run server without TLS
+    server.insecure: true
+    # -- Value for base href in index.html. Used if Argo CD is running behind reverse proxy under subpath different from /
+    server.basehref: /
+    # -- Used if Argo CD is running behind reverse proxy under subpath different from /
+    server.rootpath: ''
+    # -- Directory path that contains additional static assets
+    server.staticassets: /shared/app
+    # -- Disable Argo CD RBAC for user authentication
+    server.disable.auth: false
+    # -- Enable GZIP compression
+    server.enable.gzip: true
+    # -- Set X-Frame-Options header in HTTP responses to value. To disable, set to "".
+    server.x.frame.options: sameorigin
+
+    ## Repo-server properties
+    # -- Limit on number of concurrent manifests generate requests. Any value less the 1 means no limit.
+    reposerver.parallelism.limit: 0
+
+    ## ApplicationSet Properties
+    # -- Modify how application is synced between the generator and the cluster. One of: `sync`, `create-only`, `create-update`, `create-delete`
+    applicationsetcontroller.policy: sync
+    # -- Enables use of the Progressive Syncs capability
+    applicationsetcontroller.enable.progressive.syncs: false
+
+    # -- Enables [Applications in any namespace]
+    ## List of additional namespaces where applications may be created in and reconciled from.
+    ## The namespace where Argo CD is installed to will always be allowed.
+    ## Set comma-separated list. (e.g. app-team-one, app-team-two)
+    application.namespaces: ""
+
+## Dex
+dex:
+  # -- Enable dex
+  enabled: true
+  # -- Dex name
+  name: dex-server
+
+  # -- Additional command line arguments to pass to the Dex server
+  extraArgs: []
+
+  ## Dex image
+  image:
+    # -- Dex image repository
+    repository: ghcr.io/dexidp/dex
+    # -- Dex image tag
+    tag: v2.37.0
+    # -- Dex imagePullPolicy
+    # @default -- `""` (defaults to global.image.imagePullPolicy)
+    imagePullPolicy: ""
+
+  # -- Secrets with credentials to pull images from a private registry
+  # @default -- `[]` (defaults to global.imagePullSecrets)
+  imagePullSecrets: []
+
+  # Argo CD init image that creates Dex config
+  initImage:
+    # -- Argo CD init image repository
+    # @default -- `""` (defaults to global.image.repository)
+    repository: ""
+    # -- Argo CD init image tag
+    # @default -- `""` (defaults to global.image.tag)
+    tag: ""
+    # -- Argo CD init image imagePullPolicy
+    # @default -- `""` (defaults to global.image.imagePullPolicy)
+    imagePullPolicy: ""
+    # -- Argo CD init image resources
+    # @default -- `{}` (defaults to dex.resources)
+    resources: {}
+    #  requests:
+    #    cpu: 5m
+    #    memory: 96Mi
+    #  limits:
+    #    cpu: 10m
+    #    memory: 144Mi
+
+  # -- Environment variables to pass to the Dex server
+  env: []
+
+  # -- envFrom to pass to the Dex server
+  # @default -- `[]` (See [values.yaml])
+  envFrom: []
+  # - configMapRef:
+  #     name: config-map-name
+  # - secretRef:
+  #     name: secret-name
+
+  # -- Additional containers to be added to the dex pod
+  ## Note: Supports use of custom Helm templates
+  extraContainers: []
+
+  # -- Init containers to add to the dex pod
+  ## Note: Supports use of custom Helm templates
+  initContainers: []
+
+  # -- Additional volumeMounts to the dex main container
+  volumeMounts: []
+
+  # -- Additional volumes to the dex pod
+  volumes: []
+
+  # TLS certificate configuration via Secret
+  ## Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/tls/#configuring-tls-to-argocd-dex-server
+  ## Note: Issuing certificates via cert-manager in not supported right now because it's not possible to restart Dex automatically without extra controllers.
+  certificateSecret:
+    # -- Create argocd-dex-server-tls secret
+    enabled: false
+    # -- Labels to be added to argocd-dex-server-tls secret
+    labels: {}
+    # -- Annotations to be added to argocd-dex-server-tls secret
+    annotations: {}
+    # -- Certificate authority. Required for self-signed certificates.
+    ca: ''
+    # -- Certificate private key
+    key: ''
+    # -- Certificate data. Must contain SANs of Dex service (ie: argocd-dex-server, argocd-dex-server.argo-cd.svc)
+    crt: ''
+
+  # -- Annotations to be added to the Dex server Deployment
+  deploymentAnnotations: {}
+
+  # -- Annotations to be added to the Dex server pods
+  podAnnotations: {}
+
+  # -- Labels to be added to the Dex server pods
+  podLabels: {}
+
+  # -- Resource limits and requests for dex
+  resources: {}
+  #  limits:
+  #    cpu: 50m
+  #    memory: 64Mi
+  #  requests:
+  #    cpu: 10m
+  #    memory: 32Mi
+
+  # Dex container ports
+  # NOTE: These ports are currently hardcoded and cannot be changed
+  containerPorts:
+    # -- HTTP container port
+    http: 5556
+    # -- gRPC container port
+    grpc: 5557
+    # -- Metrics container port
+    metrics: 5558
+
+  # -- [DNS configuration]
+  dnsConfig: {}
+  # -- Alternative DNS policy for Dex server pods
+  dnsPolicy: "ClusterFirst"
+
+  # -- Dex container-level security context
+  # @default -- See [values.yaml]
+  containerSecurityContext:
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    seccompProfile:
+      type: RuntimeDefault
+    capabilities:
+      drop:
+      - ALL
+
+  ## Probes for Dex server
+  ## Supported from Dex >= 2.28.0
+  livenessProbe:
+    # -- Enable Kubernetes liveness probe for Dex >= 2.28.0
+    enabled: false
+    # -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+    failureThreshold: 3
+    # -- Number of seconds after the container has started before [probe] is initiated
+    initialDelaySeconds: 10
+    # -- How often (in seconds) to perform the [probe]
+    periodSeconds: 10
+    # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
+    successThreshold: 1
+    # -- Number of seconds after which the [probe] times out
+    timeoutSeconds: 1
+
+  readinessProbe:
+    # -- Enable Kubernetes readiness probe for Dex >= 2.28.0
+    enabled: false
+    # -- Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+    failureThreshold: 3
+    # -- Number of seconds after the container has started before [probe] is initiated
+    initialDelaySeconds: 10
+    # -- How often (in seconds) to perform the [probe]
+    periodSeconds: 10
+    # -- Minimum consecutive successes for the [probe] to be considered successful after having failed
+    successThreshold: 1
+    # -- Number of seconds after which the [probe] times out
+    timeoutSeconds: 1
+
+  # -- terminationGracePeriodSeconds for container lifecycle hook
+  terminationGracePeriodSeconds: 30
+
+  serviceAccount:
+    # -- Create dex service account
+    create: true
+    # -- Dex service account name
+    name: argocd-dex-server
+    # -- Annotations applied to created service account
+    annotations: {}
+    # -- Automount API credentials for the Service Account
+    automountServiceAccountToken: true
+
+  # -- Service port for HTTP access
+  servicePortHttp: 5556
+  # -- Service port name for HTTP access
+  servicePortHttpName: http
+  # -- Service port for gRPC access
+  servicePortGrpc: 5557
+  # -- Service port name for gRPC access
+  servicePortGrpcName: grpc
+  # -- Service port for metrics access
+  servicePortMetrics: 5558
+
+  # -- Priority class for the dex pods
+  # @default -- `""` (defaults to global.priorityClassName)
+  priorityClassName: ""
+
+  # -- [Node selector]
+  # @default -- `{}` (defaults to global.nodeSelector)
+  nodeSelector: {}
+
+  # -- [Tolerations] for use with node taints
+  # @default -- `[]` (defaults to global.tolerations)
+  tolerations: []
+
+  # -- Assign custom [affinity] rules to the deployment
+  # @default -- `{}` (defaults to global.affinity preset)
+  affinity: {}
+
+  # -- Assign custom [TopologySpreadConstraints] rules to dex
+  # @default -- `[]` (defaults to global.topologySpreadConstraints)
+  ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+  ## If labelSelector is left out, it will default to the labelSelector configuration of the deployment
+  topologySpreadConstraints: []
+    # - maxSkew: 1
+    #   topologyKey: topology.kubernetes.io/zone
+    #   whenUnsatisfiable: DoNotSchedule
+
+  # -- Deployment strategy to be added to the Dex server Deployment
+  deploymentStrategy: {}
+    # type: RollingUpdate
+    # rollingUpdate:
+    #   maxSurge: 25%
+    #   maxUnavailable: 25%
+
+  # -- Dex log format. Either `text` or `json`
+  # @default -- `""` (defaults to global.logging.format)
+  logFormat: ""
+  # -- Dex log level. One of: `debug`, `info`, `warn`, `error`
+  # @default -- `""` (defaults to global.logging.level)
+  logLevel: ""
+
+## Server
+server:
+  # -- Argo CD server name
+  name: server
+
+  # -- The number of server pods to run
+  replicas: 1
+
+  ## Server service configuration
+  service:
+    # -- Server service annotations
+    annotations: {}
+    # -- Server service labels
+    labels: {}
+    # -- Server service type
+    type: ClusterIP
+    # -- Server service http port for NodePort service type (only if `server.service.type` is set to "NodePort")
+    nodePortHttp: 30080
+    # -- Server service https port for NodePort service type (only if `server.service.type` is set to "NodePort")
+    nodePortHttps: 30443
+    # -- Server service http port
+    servicePortHttp: 80
+    # -- Server service https port
+    servicePortHttps: 443
+    # -- Server service http port name, can be used to route traffic via istio
+    servicePortHttpName: http
+    # -- Server service https port name, can be used to route traffic via istio
+    servicePortHttpsName: https
+    # -- Server service https port appProtocol. (should be upper case - i.e. HTTPS)
+    # servicePortHttpsAppProtocol: HTTPS
+    # -- LoadBalancer will get created with the IP specified in this field
+    loadBalancerIP: ""
+    # -- Source IP ranges to allow access to service from
+    loadBalancerSourceRanges: []
+    # -- Server service external IPs
+    externalIPs: []
+    # -- Denotes if this Service desires to route external traffic to node-local or cluster-wide endpoints
+    externalTrafficPolicy: ""
+    # -- Used to maintain session affinity. Supports `ClientIP` and `None`
+    sessionAffinity: ""
+
+
+  ingress:
+    # -- Enable an ingress resource for the Argo CD server
+    enabled: true
+    # -- Additional ingress annotations
+    annotations:
+      # alb.ingress.kubernetes.io/load-balancer-name: argocd-load-balancer-controller
+      # alb.ingress.kubernetes.io/scheme: internet-facing
+      # alb.ingress.kubernetes.io/target-type: ip
+      # nginx.ingress.kubernetes.io/rewrite-target: /$1
+    # -- Additional ingress labels
+    labels: {}
+    # -- Defines which ingress controller will implement the resource
+    ingressClassName: "nginx"
+
+    # -- List of ingress hosts
+    ## Argo Ingress.
+    ## Hostnames must be provided if Ingress is enabled.
+    ## Secrets must be manually created in the namespace
+    hosts: []
+      # - argocd.example.com
+
+    # -- List of ingress paths
+    paths:
+      - /
+    # -- Ingress path type. One of `Exact`, `Prefix` or `ImplementationSpecific`
+    pathType: Prefix
+    # -- Additional ingress paths
+    extraPaths: []
+      # - path: /*
+      #   pathType: Prefix
+      #   backend:
+      #     service:
+      #       name: ssl-redirect
+      #       port:
+      #         name: use-annotation
+
+    # -- Ingress TLS configuration
+    tls: []
+      # - secretName: your-certificate-name
+      #   hosts:
+      #     - argocd.example.com
+
+    # -- Uses `server.service.servicePortHttps` instead `server.service.servicePortHttp`
+    https: false

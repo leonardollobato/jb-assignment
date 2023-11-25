@@ -1,0 +1,9 @@
+clusterName: "${clusterName}"
+replicaCount: 1
+image:
+  tag: v2.6.2
+serviceAccount:
+  name: aws-load-balancer-controller
+  create: false
+nodeSelector:
+  eks.amazonaws.com/capacityType: ON_DEMAND
