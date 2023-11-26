@@ -18,7 +18,7 @@ configs:
     # -- Value for base href in index.html. Used if Argo CD is running behind reverse proxy under subpath different from /
     server.basehref: /
     # -- Used if Argo CD is running behind reverse proxy under subpath different from /
-    server.rootpath: ''
+    server.rootpath: '/admin'
     # -- Directory path that contains additional static assets
     server.staticassets: /shared/app
     # -- Disable Argo CD RBAC for user authentication
@@ -319,6 +319,7 @@ server:
       # alb.ingress.kubernetes.io/load-balancer-name: argocd-load-balancer-controller
       alb.ingress.kubernetes.io/scheme: internet-facing
       alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/group.name: main-alb-group
       # nginx.ingress.kubernetes.io/rewrite-target: /$1
     # -- Additional ingress labels
     labels: {}
@@ -334,7 +335,7 @@ server:
 
     # -- List of ingress paths
     paths:
-      - /
+      - /admin
     # -- Ingress path type. One of `Exact`, `Prefix` or `ImplementationSpecific`
     pathType: Prefix
     # -- Additional ingress paths
