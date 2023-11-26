@@ -30,17 +30,17 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    working-directory: ./docker/crawler
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
+      working-directory: ./docker/crawler
       run: docker compose build --no-cache --force-rm 
   test:
-    working-directory: ./docker/crawler
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Test the Docker image
+        working-directory: ./docker/crawler
         run: docker-compose up -d
   push_to_registry:
     name: Push Docker image to Docker Hub
