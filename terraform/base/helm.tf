@@ -134,25 +134,26 @@ resource "helm_release" "aws_load_balancer_controller" {
 # ################################################################################
 # # Argo CD
 # ################################################################################
-resource "kubernetes_namespace" "argocd_namespace" {
-  metadata {
-    name = "argocd"
-  }
+# resource "kubernetes_namespace" "argocd_namespace" {
+#   metadata {
+#     name = "argocd"
+#   }
+# }
 
-  depends_on = [module.eks.cluster_name]
-}
+# # # https://artifacthub.io/packages/helm/argo/argo-cd
+# resource "helm_release" "argocd" {
+#   name = "argocd"
 
-# https://artifacthub.io/packages/helm/argo/argo-cd
-resource "helm_release" "argocd" {
-  name = "argocd"
+#   repository = "https://argoproj.github.io/argo-helm"
+#   chart      = "argo-cd"
+#   namespace  = kubernetes_namespace.argocd_namespace.metadata[0].name
+#   version    = "5.51.4"
 
-  repository = "https://argoproj.github.io/argo-helm"
-  chart      = "argo-cd"
-  namespace  = kubernetes_namespace.argocd_namespace.metadata[0].name
-  version    = "5.51.4"
+#   values = [file("./values/argocd.values.yaml")]
 
-  values = [file("./values/argocd.values.yaml")]
+#   depends_on = [aws_eks_cluster.cluster, time_sleep.wait_argocd_termination]
+# }
 
-  depends_on = [helm_release.aws_load_balancer_controller]
-
-}
+# resource "time_sleep" "wait_argocd_termination" {
+#   destroy_duration = "300s"
+# }

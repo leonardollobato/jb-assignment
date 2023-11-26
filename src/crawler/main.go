@@ -1,62 +1,43 @@
-// package main
-
-// import (
-// 	"fmt"
-
-// 	"github.com/gocolly/colly"
-// )
-
-// func main() {
-// 	// Instantiate default collector
-// 	c := colly.NewCollector(
-// 		// Visit only domains: hackerspaces.org, wiki.hackerspaces.org
-// 		// colly.AllowedDomains("hackerspaces.org", "wiki.hackerspaces.org"),
-// 		colly.AllowedDomains("news.ycombinator.com"),
-// 	)
-
-// 	// On every a element which has href attribute call callback
-// 	c.OnHTML("span.titleline > a[href]", func(e *colly.HTMLElement) {
-// 		link := e.Attr("href")
-// 		// Print link
-// 		fmt.Printf("Link found: %q -> %s\n", e.Text, link)
-// 		// Visit link found on page
-// 		// Only those links are visited which are in AllowedDomains
-// 		c.Visit(e.Request.AbsoluteURL(link))
-// 	})
-
-// 	// Before making a request print "Visiting ..."
-// 	c.OnRequest(func(r *colly.Request) {
-// 		fmt.Println("Visiting", r.URL.String())
-// 	})
-
-// 	// Start scraping on https://news.ycombinator.com
-// 	c.Visit("https://news.ycombinator.com/")
-// }
-
-// Command screenshot is a chromedp example demonstrating how to take a
-// screenshot of a specific element and of the entire browser viewport.
 package main
 
 import (
-	// "context"
-	// "log"
-	// "os"
+	"context"
+	"encoding/json"
 	"fmt"
-	"time"
+	"log"
+	"net/url"
+	"os"
+	"path"
+	"sync"
 
-	// "github.com/chromedp/chromedp"
-	// "github.com/academy-software/go-aws-sqs-consumer"
 	consumer "github.com/academy-software/go-aws-sqs-consumer"
+	"github.com/chromedp/cdproto/page"
+	"github.com/chromedp/chromedp"
+
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
+type Info struct {
+	URL   string `json:"url"`
+	Title string `json:"title"`
+}
+
+type ProductMessage struct {
+	Products      []Info `json:"Products"`
+	ReceiptHandle string `json:"ReceiptHandle"`
+	MD5OfBody     string `json:"MD5OfBody"`
+	MessageId     string `json:"MessageId"`
+}
+
 func main() {
+	// TODO put that as var
 	q := "https://sqs.us-east-1.amazonaws.com/267074127319/test"
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
-		Profile:           "leonardo",
+		// TODO put that as var
+		// Profile: "leonardo",
 	}))
 
 	c := consumer.New(q, handle,
@@ -69,58 +50,160 @@ func main() {
 		})
 
 	c.Start()
+
 }
 
-func handle(m *sqs.Message) error {
-	fmt.Println("Message Body:", *(m.Body))
-	//emulate processing time
-	time.Sleep(time.Second * 2)
+func handle(message *sqs.Message) error {
+
+	products := ProductMessage{}
+	if err := json.Unmarshal([]byte(*message.Body), &products); err != nil {
+		log.Fatal("Error unmarshaling message body:", err)
+	}
+
+	fmt.Println("Products:", products.Products[0].URL)
+
+	for _, info := range products.Products {
+		applyWaterMark(info.Title, info.URL)
+	}
+
+	fmt.Println("Screenshot Taken")
+
 	return nil
 }
 
-// func handler() {
-// 	// create context
-// 	ctx, cancel := chromedp.NewContext(
-// 		context.Background(),
-// 		// chromedp.WithDebugf(log.Printf),
-// 	)
-// 	defer cancel()
+func applyWaterMark(title string, imageUrl string) {
+	ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithErrorf(log.Printf))
+	defer cancel()
 
-// 	// capture screenshot of an element
-// 	var buf []byte
-// 	if err := chromedp.Run(ctx, elementScreenshot(`https://pkg.go.dev/`, `img.Homepage-logo`, &buf)); err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	if err := os.WriteFile("elementScreenshot.png", buf, 0o644); err != nil {
-// 		log.Fatal(err)
-// 	}
+	// do this first so that its page.EventLoadEventFired event won't be caught
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate("about:blank"),
+	); err != nil {
+		log.Fatal(err)
+	}
 
-// 	// capture entire browser viewport, returning png with quality=90
-// 	if err := chromedp.Run(ctx, fullScreenshot(`https://brank.as/`, 90, &buf)); err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	if err := os.WriteFile("fullScreenshot.png", buf, 0o644); err != nil {
-// 		log.Fatal(err)
-// 	}
+	imageFilename := extractImageNameFromURL(imageUrl)
 
-// 	log.Printf("wrote elementScreenshot.png and fullScreenshot.png")
-// }
+	var wg sync.WaitGroup
+	wg.Add(1)
+	chromedp.ListenTarget(ctx, func(ev interface{}) {
+		switch ev.(type) {
+		case *page.EventLoadEventFired:
+			go func() {
+				var data []byte
+				if err := chromedp.Run(ctx,
+					chromedp.Screenshot("div.parent > .image", &data, chromedp.NodeVisible),
+				); err != nil {
+					fmt.Println("fail")
+				}
 
-// // elementScreenshot takes a screenshot of a specific element.
-// func elementScreenshot(urlstr, sel string, res *[]byte) chromedp.Tasks {
-// 	return chromedp.Tasks{
-// 		chromedp.Navigate(urlstr),
-// 		chromedp.Screenshot(sel, res, chromedp.NodeVisible),
-// 	}
-// }
+				if err := os.WriteFile("screenshots/with_banner_"+imageFilename, data, 0644); err != nil {
+					fmt.Println("fail")
+				}
+				wg.Done()
+			}()
+		}
+	})
 
-// // fullScreenshot takes a screenshot of the entire browser viewport.
-// //
-// // Note: chromedp.FullScreenshot overrides the device's emulation settings. Use
-// // device.Reset to reset the emulation and viewport settings.
-// func fullScreenshot(urlstr string, quality int, res *[]byte) chromedp.Tasks {
-// 	return chromedp.Tasks{
-// 		chromedp.Navigate(urlstr),
-// 		chromedp.FullScreenshot(res, quality),
-// 	}
-// }
+	html := `
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+	  <meta charset="UTF-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	  <style>
+		.image {
+		  width: 100%;
+		  height: 100%;
+		  
+		}
+	
+	  .parent {
+		overflow: hidden; /* required */
+
+		margin: 25px auto; /* for demo only */
+		border:1px solid grey; /* for demo only */
+		position: relative; /* required  for demo*/
+	  }
+	  
+	  .ribbon {
+		margin: 0;
+		padding: 0;
+		background: red;
+		color:white;
+		text-shadow: 1px 1px 1px black;
+		padding: 2em 0;
+		position: absolute;
+		top:0;
+		right:0;
+		transform: translateX(30%) translateY(0%) rotate(45deg);
+		transform-origin: top left;
+	  }
+	  .ribbon:before,
+	  .ribbon:after {
+		content: '';
+		position: absolute;
+		top:0;
+		margin: 0 -1px; /* tweak */
+		width: 100%;
+		height: 100%;
+		background: red;
+	  }
+	  .ribbon:before {
+		right:100%;
+	  }
+	
+	  .ribbon:after {
+		left:100%;
+	  }
+
+	  .overlay {
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		width: 100%;
+		height: 10%;
+		margin-bottom: 20px;
+		background-color: #eeb717;
+		opacity: 0.9;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		color: black;
+		font-size: 18px;
+		font-weight: bold;
+	  }
+	  </style>
+	</head>
+	<body>
+	<div class="parent">
+	  <img class="image" src="` + imageUrl + `" alt="Black Friday Image">
+		<h4 class="ribbon">Special Sale Today</h4>
+		<div class="overlay">` + title + `</div>
+	  </div>
+	</body>
+	</html>
+	`
+	if err := chromedp.Run(ctx,
+		chromedp.PollFunction("(html) => {document.open();document.write(html);document.close();return true;}", nil, chromedp.WithPollingArgs(html)),
+	); err != nil {
+		log.Fatal(err)
+	}
+	wg.Wait()
+}
+
+func extractImageNameFromURL(imageUrl string) string {
+
+	// Parse the URL
+	parsedURL, err := url.Parse(imageUrl)
+	if err != nil {
+		fmt.Println("Error parsing URL:", err)
+	}
+
+	// Extract the image name from the URL path
+	imageName := path.Base(parsedURL.Path)
+
+	fmt.Println("Image Name:", imageName)
+
+	return imageName
+}

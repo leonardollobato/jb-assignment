@@ -1,12 +1,17 @@
 # Stage 1: Build Golang application
 FROM golang:latest AS builder
 
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
+ARG AWS_DEFAULT_REGION
+
+ENV AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+ENV AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+ENV AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
+
 WORKDIR /app
 
-COPY src/crawler .
-
-
-RUN ls -la
+COPY ./src/crawler .
 
 # Add any additional dependencies or build steps for your Golang application here
 # For example:
@@ -15,35 +20,31 @@ RUN go get -u crawler
 # Build the Golang application
 RUN go build -o crawler
 
-# Stage 2: Final image with ChromeDriver and Golang application
-FROM zenika/alpine-chrome:with-chromedriver
+# Set up ChromeDriver installation
+RUN apt-get update && apt-get install -y wget unzip
 
-# # Install necessary dependencies
-# RUN apt-get update && \
-#     apt-get install -y \
-#     wget \
-#     unzip \
-#     libnss3 \
-#     libglib2.0-0 \
-#     libfontconfig1 \
-#     libxrender1 \
-#     libxkbcommon-x11-0 \
-#     libx11-xcb1 \
-#     libxkbcommon0 \
-#     libxss1 \
-#     libasound2 \
-#     && rm -rf /var/lib/apt/lists/*
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    gnupg \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# # Download and install ChromeDriver
-# RUN wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/$(wget -q -O - https://chromedriver.storage.googleapis.com/LATEST_RELEASE)/chromedriver_linux64.zip && \
-#     unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
-#     rm /tmp/chromedriver.zip && \
-#     chmod +x /usr/local/bin/chromedriver
 
-WORKDIR /app
+# Install Chrome
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
+    && apt-get update && apt-get install -y google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*
 
-# # Copy the built Golang application from the previous stage
-COPY --from=builder /app/crawler .
+# Download and install ChromeDriver
+ARG CHROMEDRIVER_VERSION=94.0.4606.61
+RUN wget https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip \
+    && unzip chromedriver_linux64.zip \
+    && mv chromedriver /usr/local/bin/chromedriver \
+    && rm chromedriver_linux64.zip
 
 # # Expose any necessary ports
 # # EXPOSE 8080
