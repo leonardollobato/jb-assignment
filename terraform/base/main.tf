@@ -1,10 +1,27 @@
+terraform {
+
+  # For remote state
+  # backend "s3" {
+  #     bucket = ""
+  #     key = ""
+  #     region = ""
+  # }
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.2"
+    }
+  }
+}
+
 provider "aws" {
   region = var.region
 
   default_tags {
     tags = {
       Environment = "${var.environment}"
-      Owner       = "Terraform"
+      Terraform   = "true"
     }
   }
 }
@@ -23,18 +40,4 @@ provider "helm" {
   }
 }
 
-terraform {
-  # For remote state
-  # backend "s3" {
-  #     bucket = ""
-  #     key = ""
-  #     region = ""
-  # }
 
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.2"
-    }
-  }
-}

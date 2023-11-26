@@ -1,3 +1,8 @@
+crds:
+  # -- Install and upgrade CRDs
+  install: true
+  # -- Keep CRDs on chart uninstall
+  keep: false
 
 ## Argo Configs
 configs:
@@ -312,13 +317,13 @@ server:
     # -- Additional ingress annotations
     annotations:
       # alb.ingress.kubernetes.io/load-balancer-name: argocd-load-balancer-controller
-      # alb.ingress.kubernetes.io/scheme: internet-facing
-      # alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
       # nginx.ingress.kubernetes.io/rewrite-target: /$1
     # -- Additional ingress labels
     labels: {}
     # -- Defines which ingress controller will implement the resource
-    ingressClassName: "nginx"
+    ingressClassName: "alb"
 
     # -- List of ingress hosts
     ## Argo Ingress.
