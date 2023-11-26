@@ -1,0 +1,73 @@
+name: Build and Push Docker Image to Docker Hub
+
+on:
+  workflow_dispatch:
+    inputs:
+      # Usually that's a secret in github
+      docker_username:
+        description: 'DockerHub Username'
+        required: true
+        type: string
+      docker_password:
+        description: 'DockerHub Password'
+        required: true
+        type: string
+      image:
+        description: 'Select the image to be build'
+        required: true
+        type: choice
+        options:
+          - crawler
+          - api
+
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: docker.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
+  DOCKER_PASSWORD:  ${{secrets[github.event.inputs.docker_password]}}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    working-directory: ./docker/crawler
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the Docker image
+      run: docker compose build --no-cache --force-rm 
+  test:
+    working-directory: ./docker/crawler
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test the Docker image
+        run: docker-compose up -d
+  push_to_registry:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ github.event.inputs.docker_username }}
+          password: ${{ env.DOCKER_PASSWORD }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ github.event.inputs.image }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: "{{defaultContext}}"
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

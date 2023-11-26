@@ -1,3 +1,5 @@
+# TODO: Add Multi Stage Strategy to decrease image size, preferably using Alpine
+
 # Stage 1: Build Golang application
 FROM golang:latest AS builder
 
