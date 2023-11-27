@@ -18,6 +18,9 @@ spec:
       containers:
       - name: crawler-container
         image: docker.io/llleonardo/jb-assignment-crawler:latest
+        env:
+          - name: SQL_QUEUE_URL
+            value: https://sqs.us-east-1.amazonaws.com/267074127319/test
         resources:
           limits:
             memory: "1000Mi"
