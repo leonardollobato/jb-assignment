@@ -10,7 +10,7 @@ resource "helm_release" "metrics-server" {
   namespace  = "kube-system"
   version    = "3.11.0"
 
-  values = [file("${path.module}/values/metrics.values.yaml")]
+  values = [file("./values/metrics.values.yaml")]
 }
 
 ################################################################################
@@ -41,7 +41,7 @@ resource "aws_iam_role" "cluster_autoscaler_role" {
 
   inline_policy {
     name   = "cluster-autoscaler-policy"
-    policy = file("${path.module}/iam-policies/cluster-auto-scaler-policy.json")
+    policy = file("./iam-policies/cluster-auto-scaler-policy.json")
   }
 }
 
@@ -53,8 +53,9 @@ resource "helm_release" "cluster_autoscaler" {
   namespace  = "kube-system"
   version    = "9.32.0"
 
+
   values = [
-    templatefile("${path.module}/values/autoscaler.values.yaml", {
+    templatefile("./values/autoscaler.values.yaml", {
       awsRegion = var.region,
       roleArn   = aws_iam_role.cluster_autoscaler_role.arn
     })
@@ -96,7 +97,7 @@ resource "aws_iam_role" "load_balancer_controller_role" {
 
   inline_policy {
     name   = "aws-load-balancer-controller-policy"
-    policy = file("${path.module}/iam-policies/aws-load-balancer-controller-policy.json")
+    policy = file("./iam-policies/aws-load-balancer-controller-policy.json")
   }
 }
 

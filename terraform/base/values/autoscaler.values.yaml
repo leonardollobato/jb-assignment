@@ -1,13 +1,15 @@
 awsRegion: "${awsRegion}"
-sslCertPath: "/etc/ssl/certs/ca-bundle.crt"
 cloudProvider: aws
 autoDiscovery:
   enabled: true
 fullnameOverride: "cluster-autoscaler"
-rbac:
-  create: true
-nodeSelector:
-  eks.amazonaws.com/capacityType: ON_DEMAND
-serviceAccount:
+deployment:
   annotations:
     eks.amazonaws.com/role-arn: "${roleArn}"
+rbac:
+  create: true
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: "${roleArn}"
+# nodeSelector:
+#   eks.amazonaws.com/capacityType: ON_DEMAND
