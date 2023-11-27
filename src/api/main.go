@@ -27,7 +27,9 @@
 package main
 
 import (
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -75,6 +77,13 @@ func getProducts(c *gin.Context) {
 
 // postAlbums adds an album from JSON received in the request body.
 func postProducts(c *gin.Context) {
+	// TODO put that as var
+	q := os.Getenv("SQS_QUEUE_URL")
+
+	if q == "" {
+		log.Fatal("SQS_QUEUE_URL not found")
+	}
+
 	var newProducts []product
 
 	// Call BindJSON to bind the received JSON to
