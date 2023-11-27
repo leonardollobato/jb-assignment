@@ -2,32 +2,32 @@ apiVersion: v1
 kind: Service
 metadata:
   namespace: sample-apps
-  name: orange-service
+  name: green-service
   labels:
-    app: orange-app
+    app: green-app
   annotations:
-    alb.ingress.kubernetes.io/healthcheck-path: /orange/index.html
+    alb.ingress.kubernetes.io/healthcheck-path: /green/index.html
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
-    app: orange-app
+    app: green-app
   ports:
     - port: 80
-      name: http
+      targetPort: 80
 ---
 apiVersion: v1
 kind: Service
 metadata:
   namespace: sample-apps
-  name: purple-service
+  name: blue-service
   labels:
-    app: purple-app
+    app: blue-app
   annotations:
-    alb.ingress.kubernetes.io/healthcheck-path: /purple/index.html
+    alb.ingress.kubernetes.io/healthcheck-path: /blue/index.html
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
-    app: purple-app
+    app: blue-app
   ports:
     - port: 80
-      name: http
+      targetPort: 80

@@ -1,52 +1,50 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: orange-app
+  name: green-app
   namespace: sample-apps
   labels:
-    app: orange-app
+    app: green-app
 spec:
   selector:
     matchLabels:
-      app: orange-app
+      app: green-app
   replicas: 2
   template:
     metadata:
       labels:
-        app: orange-app
+        app: green-app
     spec:
       containers:
-      - name: orange-container
-        image: public.ecr.aws/e1x6y8e1/orange:latest
+      - name: green-container
+        image: public.ecr.aws/e1x6y8e1/green:latest
         ports:
             - containerPort: 80
         resources:
           limits:
             memory: "100Mi"
             cpu: "200m"
-
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: purple-app
+  name: blue-app
   namespace: sample-apps
   labels:
-    app: purple-app
+    app: blue-app
 spec:
   selector:
     matchLabels:
-      app: purple-app
+      app: blue-app
   replicas: 2
   template:
     metadata:
       labels:
-        app: purple-app
+        app: blue-app
     spec:
       containers:
-      - name: purple-container
-        image: public.ecr.aws/e1x6y8e1/purple:latest
+      - name: blue-container
+        image: public.ecr.aws/e1x6y8e1/blue:latest
         ports:
             - containerPort: 80
         resources:
