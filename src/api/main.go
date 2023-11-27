@@ -27,6 +27,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -37,6 +38,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/gin-gonic/gin"
+
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 // products represents data about a record album.
@@ -77,7 +80,41 @@ func main() {
 
 // // getProducts responds with the list of all albums as JSON.
 func getProducts(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, products)
+	// c.IndentedJSON(http.StatusOK, products)
+	bucket := os.Getenv("S3_BUCKET")
+
+	if bucket == "" {
+		log.Fatal("S3_BUCKET not found")
+	}
+
+	// bucket := os.Getenv("S3_BUCKET")
+
+	if bucket == "" {
+		log.Fatal("S3_BUCKET not found")
+	}
+
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+		// TODO put that as var
+		// Profile: "leonardo",
+	}))
+
+	// cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile())
+
+	client := s3.NewSessionWithOptions(sess)
+
+	output, err := client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
+		Bucket: aws.String(bucket),
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, object := range output.Contents {
+		log.Printf("key=%s size=%d", aws.ToString(object.Key), object.Size)
+	}
+
 }
 
 type response struct {

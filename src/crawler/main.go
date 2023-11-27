@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -16,6 +17,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 type Product struct {
@@ -23,12 +27,20 @@ type Product struct {
 	URL   string `json:"url"`
 }
 
+var bucket = ""
+
 func main() {
 	// TODO put that as var
 	q := os.Getenv("SQS_QUEUE_URL")
 
 	if q == "" {
 		log.Fatal("SQS_QUEUE_URL not found")
+	}
+
+	bucket = os.Getenv("S3_BUCKET")
+
+	if bucket == "" {
+		log.Fatal("S3_BUCKET not found")
 	}
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
@@ -94,8 +106,10 @@ func applyWaterMark(title string, imageUrl string) {
 					fmt.Println("fail")
 				}
 
-				if err := os.WriteFile("screenshots/with_banner_"+imageFilename, data, 0644); err != nil {
-					fmt.Println("fail")
+				if err := uploadS3("with_banner_"+imageFilename, data);
+				// if err := os.WriteFile("screenshots/with_banner_"+imageFilename, data, 0644);
+				err != nil {
+					fmt.Println("upload s3 failed")
 				}
 				wg.Done()
 			}()
@@ -203,4 +217,39 @@ func extractImageNameFromURL(imageUrl string) string {
 	fmt.Println("Image Name:", imageName)
 
 	return imageName
+}
+
+func uploadS3(filename string, data []byte) error {
+
+	sesss := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+		// TODO put that as var
+		// Profile: "leonardo",
+	}))
+
+	// file, header, err := r.FormFile("file")
+	// if err != nil {
+	// 	// Do your error handling here
+	// 	return
+	// }
+	// defer file.Close()
+
+	// filename := header.Filename
+
+	uploader := s3manager.NewUploader(sesss)
+
+	_, err := uploader.Upload(&s3manager.UploadInput{
+		Bucket:      aws.String(bucket),      // Bucket to be used
+		Key:         aws.String(filename),    // Name of the file to be saved
+		Body:        bytes.NewReader(data),   // File
+		ContentType: aws.String("image/png"), // content type
+		ACL:         aws.String("public-read"),
+	})
+
+	if err != nil {
+		// Do your error handling here
+		return err
+	}
+
+	return nil
 }

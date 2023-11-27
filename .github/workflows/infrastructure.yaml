@@ -1,0 +1,56 @@
+name: 🚀 Infra Deployment
+
+on:
+  workflow_dispatch:
+
+permissions:
+    id-token: write
+    contents: read
+    issues: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: ./terraform/aws
+    steps:
+      - name: Checkout Git Repository
+        uses: actions/checkout@v4
+
+      - name: 'Configure AWS Credentials'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          # aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
+          role-session-name: github-actions-session
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform init and validate
+        working-directory: ./terraform/aws
+        run: |
+          terraform init
+
+      - name: Terraform plan
+        working-directory: ./terraform/aws
+        run: |
+          terraform plan
+
+      - uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: leonardollobato 
+          minimum-approvals: 1
+          issue-title: "Create Infrastructure"
+          issue-body: "Review the terraform plan, then approve or deny the infrastructure creation"
+          exclude-workflow-initiator-as-approver: false
+
+      - name: Terraform apply
+        working-directory: ./terraform/aws
+        run: |
+          terraform apply --auto-approve 
