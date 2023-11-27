@@ -18,16 +18,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
-type Info struct {
-	URL   string `json:"url"`
+type Product struct {
 	Title string `json:"title"`
-}
-
-type ProductMessage struct {
-	Products      []Info `json:"Products"`
-	ReceiptHandle string `json:"ReceiptHandle"`
-	MD5OfBody     string `json:"MD5OfBody"`
-	MessageId     string `json:"MessageId"`
+	URL   string `json:"url"`
 }
 
 func main() {
@@ -59,14 +52,14 @@ func main() {
 
 func handle(message *sqs.Message) error {
 
-	products := ProductMessage{}
+	products := []Product{}
 	if err := json.Unmarshal([]byte(*message.Body), &products); err != nil {
 		log.Fatal("Error unmarshaling message body:", err)
 	}
 
-	fmt.Println("Products:", products.Products[0].URL)
+	fmt.Println("Products:", products[0].URL)
 
-	for _, info := range products.Products {
+	for _, info := range products {
 		applyWaterMark(info.Title, info.URL)
 	}
 

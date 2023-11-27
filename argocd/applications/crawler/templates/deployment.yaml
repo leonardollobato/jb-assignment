@@ -15,6 +15,10 @@ spec:
       labels:
         app: crawler-app
     spec:
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+      {{- end }}
       containers:
       - name: crawler-container
         image: {{ .Values.dockerImageUrl }}

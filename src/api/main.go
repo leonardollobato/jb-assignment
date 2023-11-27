@@ -27,6 +27,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -39,13 +40,13 @@ import (
 )
 
 // products represents data about a record album.
-type product struct {
+type Product struct {
 	Title string `json:"title"`
 	URL   string `json:"url"`
 }
 
 // products slice to seed record album data.
-var products = []product{
+var products = []Product{
 	{Title: "Jumbo Yoghurt Griekse Stijl  Naturel 10% Vet 1kg", URL: "https://jumbo.com/dam-images/fit-in/360x360/Products/18092023_1695036579191_1695036591485_8718452394951_1.png"},
 	{Title: "Jumbo Champignons Voordeelverpakking 400g", URL: "https://jumbo.com/dam-images/fit-in/360x360/Products/29092023_1695996129860_1695996141161_8718452601240_1.png"},
 }
@@ -79,10 +80,25 @@ func getProducts(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, products)
 }
 
+type response struct {
+	Endpoint string
+}
+
 // postAlbums adds an album from JSON received in the request body.
 func postProducts(c *gin.Context) {
+
+	var newProducts []Product
+
+	// Call BindJSON to bind the received JSON to
+	// newProduct.
+	if err := c.BindJSON(&newProducts); err != nil {
+		return
+	}
+
 	// TODO put that as var
 	q := os.Getenv("SQS_QUEUE_URL")
+
+	println("queue: ", q)
 
 	if q == "" {
 		log.Fatal("SQS_QUEUE_URL not found")
@@ -94,23 +110,25 @@ func postProducts(c *gin.Context) {
 		// Profile: "leonardo",
 	}))
 
-	messageBody := "This is a test message"
-	err := SendMessage(sess, q, messageBody)
+	// Marshal JSON data into a byte slice
+	jsonData, err := json.Marshal(newProducts)
+	if err != nil {
+		fmt.Println("Error marshaling JSON data:", err)
+		return
+	}
+
+	// Convert byte slice to a string
+	messageBody := string(jsonData)
+	fmt.Println("JSON string:", messageBody)
+
+	// messageBody := newProducts[].(string)
+	err = SendMessage(sess, q, messageBody)
 	if err != nil {
 		fmt.Printf("Got an error while trying to send message to queue: %v", err)
 		return
 	}
 
 	fmt.Println("Message sent successfully")
-
-	var newProducts []product
-
-	// Call BindJSON to bind the received JSON to
-	// newProduct.
-	if err := c.BindJSON(&newProducts); err != nil {
-		return
-	}
-
 	// Add the new album to the slice.
 	products = append(products, newProducts...)
 	c.IndentedJSON(http.StatusCreated, newProducts)

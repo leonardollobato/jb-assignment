@@ -15,6 +15,10 @@ spec:
       labels:
         app: api-app
     spec:
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+      {{- end }}
       containers:
       - name: api-container
         image: {{ .Values.dockerImageUrl }}
