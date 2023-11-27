@@ -37,9 +37,6 @@ jobs:
     # needs: test
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./src/crawler
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -62,7 +59,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: "{{defaultContext}}"
+          context: "./src/crawler/Dockerfile"
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
