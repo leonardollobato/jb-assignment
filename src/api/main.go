@@ -27,10 +27,14 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/gin-gonic/gin"
 )
 
@@ -84,6 +88,21 @@ func postProducts(c *gin.Context) {
 		log.Fatal("SQS_QUEUE_URL not found")
 	}
 
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+		// TODO put that as var
+		// Profile: "leonardo",
+	}))
+
+	messageBody := "This is a test message"
+	err := SendMessage(sess, q, messageBody)
+	if err != nil {
+		fmt.Printf("Got an error while trying to send message to queue: %v", err)
+		return
+	}
+
+	fmt.Println("Message sent successfully")
+
 	var newProducts []product
 
 	// Call BindJSON to bind the received JSON to
@@ -95,4 +114,15 @@ func postProducts(c *gin.Context) {
 	// Add the new album to the slice.
 	products = append(products, newProducts...)
 	c.IndentedJSON(http.StatusCreated, newProducts)
+}
+
+func SendMessage(sess *session.Session, queueUrl string, messageBody string) error {
+	sqsClient := sqs.New(sess)
+
+	_, err := sqsClient.SendMessage(&sqs.SendMessageInput{
+		QueueUrl:    &queueUrl,
+		MessageBody: aws.String(messageBody),
+	})
+
+	return err
 }
