@@ -32,7 +32,11 @@ type ProductMessage struct {
 
 func main() {
 	// TODO put that as var
-	q := "https://sqs.us-east-1.amazonaws.com/267074127319/test"
+	q := os.Getenv("SQS_QUEUE_URL")
+
+	if q == "" {
+		log.Fatal("SQL_QUEUE_URL not found")
+	}
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
