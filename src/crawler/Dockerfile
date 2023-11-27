@@ -13,7 +13,7 @@ ENV AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
 
 WORKDIR /app
 
-COPY ./src/crawler .
+COPY . .
 
 # Add any additional dependencies or build steps for your Golang application here
 # For example:
