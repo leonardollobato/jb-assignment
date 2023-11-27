@@ -41,17 +41,9 @@ jobs:
         run: |
           terraform plan
 
-      # - uses: trstringer/manual-approval@v1
-      #   with:
-      #     secret: ${{ github.TOKEN }}
-      #     approvers: leonardollobato 
-      #     minimum-approvals: 1
-      #     issue-title: "Create Infrastructure"
-      #     issue-body: "Review the terraform plan, then approve or deny the infrastructure creation"
-      #     exclude-workflow-initiator-as-approver: false
 
-      # - name: Terraform apply
-      #   env:
-      #     TF_VAR_aws_auth_roles: "${{ secrets.AUTH_ROLES }}"
-      #   run: |
-      #     terraform apply --auto-approve 
+      - name: Terraform apply
+        env:
+          TF_VAR_aws_auth_roles: "${{ secrets.AUTH_ROLES }}"
+        run: |
+          terraform apply --auto-approve 
