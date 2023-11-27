@@ -1,3 +1,29 @@
+// package main
+
+// import (
+// 	"net/http"
+
+// 	"github.com/gin-gonic/gin"
+// )
+
+// func main() {
+// 	router := gin.Default()
+
+// 	// Configure Gin to trust proxy headers
+// 	router.Use(gin.Recovery())
+// 	router.Use(gin.Logger())
+
+// 	// Define your routes here
+// 	router.GET("/", func(c *gin.Context) {
+// 		c.JSON(http.StatusOK, gin.H{"message": "Hello World!"})
+// 	})
+
+// 	router.GET("/products", getProducts)
+// 	router.POST("/products", postProducts)
+
+// 	router.Run("localhost:8080")
+// }
+
 package main
 
 import (
@@ -6,37 +32,43 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// album represents data about a record album.
+// products represents data about a record album.
 type product struct {
 	Title string `json:"title"`
 	URL   string `json:"url"`
 }
 
-// albums slice to seed record album data.
+// products slice to seed record album data.
 var products = []product{
 	{Title: "Jumbo Yoghurt Griekse Stijl  Naturel 10% Vet 1kg", URL: "https://jumbo.com/dam-images/fit-in/360x360/Products/18092023_1695036579191_1695036591485_8718452394951_1.png"},
 	{Title: "Jumbo Champignons Voordeelverpakking 400g", URL: "https://jumbo.com/dam-images/fit-in/360x360/Products/29092023_1695996129860_1695996141161_8718452601240_1.png"},
 }
 
 func main() {
-	router := gin.Default()
+	r := gin.Default()
 
-	// Configure Gin to trust proxy headers
-	router.Use(gin.Recovery())
-	router.Use(gin.Logger())
+	r.Use(gin.Recovery())
+	r.Use(gin.Logger())
 
 	// Define your routes here
-	router.GET("/", func(c *gin.Context) {
+	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "Hello World!"})
 	})
 
-	router.GET("/products", getProducts)
-	router.POST("/products", postProducts)
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
+	})
 
-	router.Run("localhost:8080")
+	r.GET("/products", getProducts)
+
+	r.POST("/products", postProducts)
+
+	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
 
-// getAlbums responds with the list of all albums as JSON.
+// // getProducts responds with the list of all albums as JSON.
 func getProducts(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, products)
 }

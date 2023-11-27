@@ -17,10 +17,12 @@ spec:
     spec:
       containers:
       - name: api-container
-        image: docker.io/llleonardo/jb-assignment-api:latest
+        image: {{ .Values.dockerImageUrl }}
         env:
           - name: SQS_QUEUE_URL
-            value: https://sqs.us-east-1.amazonaws.com/267074127319/test
+            value: {{ .Values.sqsQueueUrl }}
+          - name: AWS_DEFAULT_REGION
+            value: {{ .Values.region }}
         resources:
           limits:
             memory: "500Mi"
