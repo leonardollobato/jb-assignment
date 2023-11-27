@@ -18,6 +18,7 @@ spec:
       containers:
       - name: api-container
         image: {{ .Values.dockerImageUrl }}
+        imagePullPolicy: Always
         env:
           - name: SQS_QUEUE_URL
             value: {{ .Values.sqsQueueUrl }}
