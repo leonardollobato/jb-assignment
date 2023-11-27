@@ -155,11 +155,11 @@ resource "helm_release" "argocd" {
 }
 
 resource "time_sleep" "wait_argocd_termination" {
-  destroy_duration = "90s"
+  destroy_duration = "30s"
 }
 
 resource "time_sleep" "wait_argocd_creation" {
-  create_duration = "90s"
+  create_duration = "30s"
 
   depends_on = [helm_release.aws_load_balancer_controller]
 }
