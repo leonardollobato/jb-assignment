@@ -22,6 +22,6 @@ output "oidc_issuer_url" {
 }
 
 # Cluster Autoscaler
-output "cluster_autoscaler_role_arn" {
-  value = aws_iam_role.cluster_autoscaler_role.arn
-}
+# output "cluster_autoscaler_role_arn" {
+#   value = aws_iam_role.cluster_autoscaler_role.arn
+# }

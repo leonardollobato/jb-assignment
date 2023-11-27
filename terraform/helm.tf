@@ -17,6 +17,9 @@ resource "helm_release" "metrics-server" {
 # Cluster AutoScaler
 ################################################################################
 # https://artifacthub.io/packages/helm/cluster-autoscaler/cluster-autoscaler
+################################################################################
+# Cluster AutoScaler
+################################################################################
 data "aws_iam_policy_document" "cluster_autoscaler_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
@@ -36,15 +39,16 @@ data "aws_iam_policy_document" "cluster_autoscaler_assume_role_policy" {
 }
 
 resource "aws_iam_role" "cluster_autoscaler_role" {
-  name               = local.iam_autoscaler_role
+  name               = "cluster-autoscaler-${var.environment}-role"
   assume_role_policy = data.aws_iam_policy_document.cluster_autoscaler_assume_role_policy.json
 
   inline_policy {
     name   = "cluster-autoscaler-policy"
-    policy = file("./iam-policies/cluster-auto-scaler-policy.json")
+    policy = file("${path.module}/iam-policies/cluster-auto-scaler-policy.json")
   }
 }
 
+# https://artifacthub.io/packages/helm/cluster-autoscaler/cluster-autoscaler
 resource "helm_release" "cluster_autoscaler" {
   name = "cluster-autoscaler"
 
@@ -53,13 +57,54 @@ resource "helm_release" "cluster_autoscaler" {
   namespace  = "kube-system"
   version    = "9.32.0"
 
+  set {
+    name  = "fullnameOverride"
+    value = "cluster-autoscaler"
+  }
 
-  values = [
-    templatefile("./values/autoscaler.values.yaml", {
-      awsRegion = var.region,
-      roleArn   = aws_iam_role.cluster_autoscaler_role.arn
-    })
-  ]
+  set {
+    name  = "autoDiscovery.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "autoDiscovery.clusterName"
+    value = module.eks.cluster_name
+  }
+
+  set {
+    name  = "cloudProvider"
+    value = "aws"
+  }
+
+  set {
+    name  = "awsRegion"
+    value = var.region
+  }
+
+  set {
+    name  = "rbac.create"
+    value = "true"
+  }
+
+  set {
+    name  = "sslCertPath"
+    value = "/etc/ssl/certs/ca-bundle.crt"
+  }
+
+  set {
+    name  = "rbac.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = aws_iam_role.cluster_autoscaler_role.arn
+    type  = "string"
+  }
+
+  # set {
+  #   name  = "nodeSelector.eks\\.amazonaws\\.com/capacityType"
+  #   value = "ON_DEMAND"
+  #   type  = "string"
+  # }
+
+  # depends_on = [ module.eks.cluster_name, aws_iam_role.cluster_autoscaler_role ]
 }
 
 
