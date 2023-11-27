@@ -17,8 +17,23 @@ spec:
     spec:
       containers:
       - name: crawler-container
-        image: docker.io/llleonardo/jb-assignment-crawler/
+        image: docker.io/llleonardo/jb-assignment-crawler:latest
         resources:
           limits:
             memory: "1000Mi"
             cpu: "1000m"
+
+            project: default
+source:
+  repoURL: 'https://github.com/leonardollobato/jb-assignment'
+  path: argocd/applications/blue-green
+  targetRevision: main
+destination:
+  server: 'https://kubernetes.default.svc'
+  namespace: sample-apps
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
+  syncOptions:
+    - CreateNamespace=true
