@@ -1,33 +1,6 @@
-// package main
-
-// import (
-// 	"net/http"
-
-// 	"github.com/gin-gonic/gin"
-// )
-
-// func main() {
-// 	router := gin.Default()
-
-// 	// Configure Gin to trust proxy headers
-// 	router.Use(gin.Recovery())
-// 	router.Use(gin.Logger())
-
-// 	// Define your routes here
-// 	router.GET("/", func(c *gin.Context) {
-// 		c.JSON(http.StatusOK, gin.H{"message": "Hello World!"})
-// 	})
-
-// 	router.GET("/products", getProducts)
-// 	router.POST("/products", postProducts)
-
-// 	router.Run("localhost:8080")
-// }
-
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -36,10 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/gin-gonic/gin"
-
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 // products represents data about a record album.
@@ -80,41 +52,46 @@ func main() {
 
 // // getProducts responds with the list of all albums as JSON.
 func getProducts(c *gin.Context) {
-	// c.IndentedJSON(http.StatusOK, products)
+
 	bucket := os.Getenv("S3_BUCKET")
 
 	if bucket == "" {
 		log.Fatal("S3_BUCKET not found")
 	}
 
-	// bucket := os.Getenv("S3_BUCKET")
+	s3Url := os.Getenv("S3_URL")
 
 	if bucket == "" {
-		log.Fatal("S3_BUCKET not found")
+		log.Fatal("S3_URL not found")
 	}
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
-		// TODO put that as var
-		// Profile: "leonardo",
 	}))
 
-	// cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile())
+	// Create an S3 client
+	svc := s3.New(sess)
 
-	client := s3.NewSessionWithOptions(sess)
-
-	output, err := client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
+	// Create an input object
+	input := &s3.ListObjectsInput{
 		Bucket: aws.String(bucket),
-	})
+	}
 
+	// // List the objects in the bucket
+	result, err := svc.ListObjects(input)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Error listing objects:", err)
+		return
 	}
 
-	for _, object := range output.Contents {
-		log.Printf("key=%s size=%d", aws.ToString(object.Key), object.Size)
+	var objectKeys []string
+	// // Print the objects
+	for _, object := range result.Contents {
+		fmt.Println(*object.Key)
+		objectKeys = append(objectKeys, s3Url+"/"+*object.Key)
 	}
 
+	c.IndentedJSON(http.StatusOK, objectKeys)
 }
 
 type response struct {
@@ -143,8 +120,6 @@ func postProducts(c *gin.Context) {
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
-		// TODO put that as var
-		// Profile: "leonardo",
 	}))
 
 	// Marshal JSON data into a byte slice

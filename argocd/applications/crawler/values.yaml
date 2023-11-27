@@ -1,4 +1,5 @@
 sqsQueueUrl: https://sqs.us-east-1.amazonaws.com/267074127319/crawler-url-assignment-cluster-dev-queue
+s3Bucket: crawler-url-assignment-cluster-dev-bucket
 dockerImageUrl: docker.io/llleonardo/jb-assignment-crawler:latest
 region: us-east-1
 nodeSelector:

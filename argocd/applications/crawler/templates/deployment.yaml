@@ -28,6 +28,8 @@ spec:
             value: {{ .Values.sqsQueueUrl }}
           - name: AWS_DEFAULT_REGION
             value: {{ .Values.region }}
+          - name: S3_BUCKET
+            value: {{ .Values.s3Bucket }}
         resources:
           limits:
             memory: "1000Mi"

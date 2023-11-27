@@ -45,8 +45,6 @@ func main() {
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
-		// TODO put that as var
-		// Profile: "leonardo",
 	}))
 
 	c := consumer.New(q, handle,
@@ -223,18 +221,7 @@ func uploadS3(filename string, data []byte) error {
 
 	sesss := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
-		// TODO put that as var
-		// Profile: "leonardo",
 	}))
-
-	// file, header, err := r.FormFile("file")
-	// if err != nil {
-	// 	// Do your error handling here
-	// 	return
-	// }
-	// defer file.Close()
-
-	// filename := header.Filename
 
 	uploader := s3manager.NewUploader(sesss)
 
