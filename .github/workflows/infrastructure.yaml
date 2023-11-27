@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 60
     defaults:
       run:
-        working-directory: ./terraform/aws
+        working-directory: ./terraform
     steps:
       - name: Checkout Git Repository
         uses: actions/checkout@v4
@@ -32,12 +32,12 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Terraform init and validate
-        working-directory: ./terraform/aws
         run: |
           terraform init
 
       - name: Terraform plan
-        working-directory: ./terraform/aws
+        env:
+          TF_VAR_aws_auth_roles: "${{ secrets.AWS_AUTH_ROLES }}"
         run: |
           terraform plan
 
@@ -50,7 +50,8 @@ jobs:
           issue-body: "Review the terraform plan, then approve or deny the infrastructure creation"
           exclude-workflow-initiator-as-approver: false
 
-      - name: Terraform apply
-        working-directory: ./terraform/aws
-        run: |
-          terraform apply --auto-approve 
+      # - name: Terraform apply
+      #   env:
+      #     TF_VAR_aws_auth_roles: "${{ secrets.AUTH_ROLES }}"
+      #   run: |
+      #     terraform apply --auto-approve 
