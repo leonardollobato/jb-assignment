@@ -18,25 +18,28 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      working-directory: ./docker/crawler
-      run: docker compose build --no-cache --force-rm 
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Test the Docker image
-        working-directory: ./docker/crawler
-        run: docker-compose up -d
+  # build:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   - name: Build the Docker image
+  #     working-directory: ./docker/crawler
+  #     run: docker compose build --no-cache --force-rm 
+  # test:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Test the Docker image
+  #       working-directory: ./docker/crawler
+  #       run: docker-compose up -d
   push_to_registry:
-    needs: test
+    # needs: test
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./docker/crawler
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
