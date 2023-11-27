@@ -1,13 +1,12 @@
-# Assignment (Work In Progress)
+# Assignment 
 
 1. Terraform
 2. Docker Images
 3. Argo CD Application Deployment
 4. Interaction with Apps
-5. GitHub Actions CI
 6. Assets for Testing
 
----
+
 ## 1 Terraform
 
 Terraform was used to create the underlying Infrastructure like the EKS cluster.
@@ -17,7 +16,8 @@ Also using terraform some complementary applications were installed using helm_r
 - cluster auto scaler
 - aws load balancer controller
 - Argocd
----
+
+
 
 ## 2 Docker Images
 
@@ -27,7 +27,7 @@ Also using terraform some complementary applications were installed using helm_r
 
 ---
 
-## 3 Argo CD Application Deployment
+## 3 Argo CD - Applications Deployment
 
 ArgoCD is used to maintain the two sample applications:
 
@@ -66,7 +66,7 @@ The screenshot is sent to an S3 bucket.
 kubectl apply -f argocd/application/<application-yaml-file>
 ```
 
----
+
 
 ## 4 Interaction with Apps 
 
@@ -77,11 +77,7 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
           -o jsonpath="{.data.password}" | base64 -d; echo
 ```
 
-## 5 GitHub Actions
-
-
-
-## 7 Assets for Testing
+## 6 Assets for Testing
 
 - Jumbo Krulfriet Mild Gekruid 750g
     - https://jumbo.com/dam-images/fit-in/720x720/Products/10082023_1691675073211_1691675123395_8718452431991_1.png
