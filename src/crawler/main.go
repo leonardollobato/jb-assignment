@@ -35,7 +35,7 @@ func main() {
 	q := os.Getenv("SQS_QUEUE_URL")
 
 	if q == "" {
-		log.Fatal("SQL_QUEUE_URL not found")
+		log.Fatal("SQS_QUEUE_URL not found")
 	}
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{

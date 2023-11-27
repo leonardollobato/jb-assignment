@@ -1,29 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crawler-app
+  name: api-app
   namespace: sample-apps
   labels:
-    app: crawler-app
+    app: api-app
 spec:
   selector:
     matchLabels:
-      app: crawler-app
+      app: api-app
   replicas: 1
   template:
     metadata:
       labels:
-        app: crawler-app
+        app: api-app
     spec:
       containers:
-      - name: crawler-container
-        image: docker.io/llleonardo/jb-assignment-crawler:latest
+      - name: api-container
+        image: docker.io/llleonardo/jb-assignment-api:latest
         env:
           - name: SQS_QUEUE_URL
             value: https://sqs.us-east-1.amazonaws.com/267074127319/test
-          - name: AWS_DEFAULT_REGION
-            value: us-east-1
         resources:
           limits:
-            memory: "1000Mi"
-            cpu: "1000m"
+            memory: "500Mi"
+            cpu: "500m"
