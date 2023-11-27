@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: orange-app
-  namespace: orange-purple-ns
+  namespace: sample-apps
   labels:
     app: orange-app
 spec:
@@ -31,7 +31,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: purple-app
-  namespace: orange-purple-ns
+  namespace: sample-apps
   labels:
     app: purple-app
 spec:

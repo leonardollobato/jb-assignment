@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: orange-purple-ns
+  namespace: sample-apps
   name: orange-service
   labels:
     app: orange-app
@@ -18,7 +18,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: orange-purple-ns
+  namespace: sample-apps
   name: purple-service
   labels:
     app: purple-app

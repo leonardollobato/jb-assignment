@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: orange-purple-ns
+  name: sample-apps
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: orange-app
-  namespace: orange-purple-ns
+  namespace: sample-apps
   labels:
     app: orange-app
 spec:
@@ -34,7 +34,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: purple-app
-  namespace: orange-purple-ns
+  namespace: sample-apps
   labels:
     app: purple-app
 spec:
@@ -60,7 +60,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: orange-purple-ns
+  namespace: sample-apps
   name: orange-service
   labels:
     app: orange-app
@@ -77,7 +77,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: orange-purple-ns
+  namespace: sample-apps
   name: purple-service
   labels:
     app: purple-app
@@ -97,7 +97,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: orange-purple-ingress
-  namespace: orange-purple-ns
+  namespace: sample-apps
   labels:
     app: color-2
   annotations:

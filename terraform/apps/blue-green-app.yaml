@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: blue-green-ns
+  name: sample-apps
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: green-app
-  namespace: blue-green-ns
+  namespace: sample-apps
   labels:
     app: green-app
 spec:
@@ -34,7 +34,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: blue-app
-  namespace: blue-green-ns
+  namespace: sample-apps
   labels:
     app: blue-app
 spec:
@@ -60,7 +60,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: blue-green-ns
+  namespace: sample-apps
   name: green-service
   labels:
     app: green-app
@@ -77,7 +77,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  namespace: blue-green-ns
+  namespace: sample-apps
   name: blue-service
   labels:
     app: blue-app
@@ -96,7 +96,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: blue-green-ingress
-  namespace: blue-green-ns
+  namespace: sample-apps
   labels:
     app: color-1
   annotations:
