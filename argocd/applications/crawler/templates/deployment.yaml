@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crawler-app
+  namespace: sample-apps
+  labels:
+    app: crawler-app
+spec:
+  selector:
+    matchLabels:
+      app: crawler-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: crawler-app
+    spec:
+      containers:
+      - name: crawler-container
+        image: docker.io/llleonardo/jb-assignment-crawler/
+        resources:
+          limits:
+            memory: "1000Mi"
+            cpu: "1000m"
