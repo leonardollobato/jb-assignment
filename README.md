@@ -1,21 +1,74 @@
 # Assignment (Work In Progress)
 
 1. Terraform
-2. Applications
-3. Docker Images
-4. Argo CD Application Deployment
-5. Monitoring
-6. Interaction with Apps
-    5.1. Load Balancer URL
-    5.2. Commands 
-7. GitHub Actions CI
-8. Assets for Testing
+2. Docker Images
+3. Argo CD Application Deployment
+4. Interaction with Apps
+5. GitHub Actions CI
+6. Assets for Testing
+
+---
+## 1 Terraform
+
+Terraform was used to create the underlying Infrastructure like the EKS cluster.
+
+Also using terraform some complementary applications were installed using helm_release, like:
+- metrics server
+- cluster auto scaler
+- aws load balancer controller
+- Argocd
+---
+
+## 2 Docker Images
+
+[jb-assignment-crawler](https://hub.docker.com/repository/docker/llleonardo/jb-assignment-crawler)
+
+[jb-assignment-api](https://hub.docker.com/repository/docker/llleonardo/jb-assignment-api)
+
+---
+
+## 3 Argo CD Application Deployment
+
+ArgoCD is used to maintain the two sample applications:
+
+### API
+A very simple golang api with the following endpoints:
+
+```
+/products (GET)
+```
+List objects in the bucket where the generated images are stored
+
+```
+/products (POST)
+
+curl <load-balancer-url>/products \
+    --include \
+    --header "Content-Type: application/json" \
+    --request "POST" \
+    --data '[{"title": "Jumbo Krulfriet Mild Gekruid 750g","url": "https://jumbo.com/dam-images/fit-in/720x720/Products/10082023_1691675073211_1691675123395_8718452431991_1.png"}]'
+
+```
+Receive the Products and send it to a SQS that is consumed by Crawler app
+
+### Crawler
+
+Consumes from a SQS queue that contains product images and title.
+
+It apply some overlay in the image and take a screenshot.
+
+The screenshot is sent to an S3 bucket.
 
 
+### Install Applications
 
-## 4 Argo CD Application Deployment
+```
+kubectl apply -f argocd/application/<application-yaml-file>
+```
 
+---
 
+## 4 Interaction with Apps 
 
 ### Retrieve ArgoCD UI Admin password
 
@@ -24,27 +77,8 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
           -o jsonpath="{.data.password}" | base64 -d; echo
 ```
 
-### Retrieve Grafana Dashboard Admin password
-```
-kubectl get secret \
--n argocd \
-kube-prometheus-stack-grafana \
--o jsonpath="{.data.admin-password}" | base64 --decode ; echo
-```
+## 5 GitHub Actions
 
-## 6.2 Commands
-
-### Add Product
-
-Replace "load-balancer-url"
-
-```
-curl <load-balancer-url>/products \
-    --include \
-    --header "Content-Type: application/json" \
-    --request "POST" \
-    --data '[{"title": "Jumbo Krulfriet Mild Gekruid 750g","url": "https://jumbo.com/dam-images/fit-in/720x720/Products/10082023_1691675073211_1691675123395_8718452431991_1.png"}]'
-```
 
 
 ## 7 Assets for Testing
